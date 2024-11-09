@@ -1,7 +1,4 @@
 import sqlite3
-import sys
-import pynput
-from tabulate import tabulate
 from attendee_manager import AttendeeManager
 from event_manager import EventManager
 

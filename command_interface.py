@@ -1,45 +1,32 @@
-import tabulate
+import sys
+import cmd2
+from cmd2 import style, Fg
+import sys
+from tabulate import tabulate
 
-class CommandInterface:
+
+class CommandInterface(cmd2.Cmd):
+    intro = "CLI for the Lusail Stadium database. Use 'help' or 'help <command>'."
+    prompt = "DATABASE> "
+
     def __init__(self):
-        self.commands = {
-            "exit": self.exit_program,
-            "show_database": self.show_database,
-            "show_details": self.show_attendee_details,
-            "add": self.add_attendee,
-            "remove": self.remove_attendee
-        }
+        super().__init__()
 
-    def show_database(self, args):
-        if not args:
-            print("Usage: show <table_name> [-t/--tabulate]")
-            return
+    def do_exit(self, args):
+        """Exits the program."""
+        print("Exiting application.")
+        sys.exit(0)
+        return True
 
-        file = args[0]
-        is_tabulated = "-t" in args or "--tabulate" in args
-        self.cursor.execute("SELECT * FROM attendees")
-        if is_tabulated:
-            print(tabulate(self.cursor.fetchall(), tablefmt="simple_grid"))
-        else:
-            print(self.cursor.fetchall())
+    def do_quit(self, args):
+        return self.do_exit(args)
 
-    def parse_command(self, command_str):
-        parts = command_str.strip().split()
-        if not parts:
-            return
-        command = parts[0]
-        args = parts[1:]
-        print(command, "\n", args)
+    def default(self, statement):
+        self.poutput(style(f"Error - Unknown Command: {statement.raw}\n"
+                           f"Check syntax or use help or help <command>.",
+                           fg=Fg.RED))
 
-        if command == "show" and len(args) > 0 and args[0] == "details":
-            command_key = "show_details"
-            args = args[1:]
-        else:
-            command_key = command
 
-        if command_key in self.commands:
-            result = self.commands[command_key](args)
-            if result == "exit":
-                return "exit"
-        else:
-            print(f"Error Occurred - Unknown command: '{command_str}'")
+if __name__ == "__main__":
+    interface = CommandInterface()
+    interface.cmdloop()
