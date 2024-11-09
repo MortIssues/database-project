@@ -1,9 +1,11 @@
 import sqlite3
 from attendee_manager import AttendeeManager
 from event_manager import EventManager
+from command_interface import CommandInterface
 
-class DatabaseManager(AttendeeManager, EventManager):
+class DatabaseManager(AttendeeManager, EventManager, CommandInterface):
     def __init__(self):
+        super().__init__()
         try:
             self.connection = sqlite3.connect("lusail_stadium.db")
             self.cursor = self.connection.cursor()

@@ -2,6 +2,7 @@ from database_manager import DatabaseManager
 
 def main():
     db = DatabaseManager()
+    db.cmdloop()
 
     del db
 
