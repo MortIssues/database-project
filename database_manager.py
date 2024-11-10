@@ -1,7 +1,10 @@
 import sqlite3
+from tabulate import tabulate
+from cmd2 import style, Fg, with_argparser
 from attendee_manager import AttendeeManager
 from event_manager import EventManager
 from command_interface import CommandInterface
+
 
 class DatabaseManager(AttendeeManager, EventManager, CommandInterface):
     def __init__(self):
@@ -16,16 +19,17 @@ class DatabaseManager(AttendeeManager, EventManager, CommandInterface):
         except sqlite3.Error as error:
             print("Error Occurred - \n", error)
 
-    def __del__(self):
-        if self.connection:
-            self.cursor.close()
-            self.connection.close()
-            print("Connection Terminated")
+    def issue_sql(self, cmd):
+        self.cursor.execute(cmd)
+        self.connection.commit()
 
-    def get_column_names(self, table):
-        self.cursor.execute("PRAGMA table_info(?)", (table,))
+    def print_database(self, table_name, is_tabulated):
+        self.cursor.execute(f"SELECT * FROM {table_name}")
+        rows = self.cursor.fetchall()
+        column_names = [description[0] for description in self.cursor.description]
 
-    def exit_program(self, args):
-        print("Exiting application.")
-        self.connection.close()
-        return "exit"
+        if is_tabulated:
+            print(tabulate(rows, headers=column_names, tablefmt="simple_outline"))
+        else:
+            for row in rows:
+                print(row)

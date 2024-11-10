@@ -13,18 +13,26 @@ class CommandInterface(cmd2.Cmd):
     def do_exit(self, args):
         """Exits the program."""
         print("Exiting application.")
+        if self.connection:
+            self.cursor.close()
+            self.connection.close()
+            print("Connection Terminated")
         sys.exit(0)
         return True
 
     def do_quit(self, args):
         return self.do_exit(args)
 
+    def do_SQL(self, args):
+        """Issues an sql command."""
+        self.issue_SQL(args)
+
     show_parser = argparse.ArgumentParser(prog="show")
     subparsers = show_parser.add_subparsers(dest="subcommand")
 
-    file_parser = subparsers.add_parser('file', help="Show contents of a database file")
-    file_parser.add_argument('filename', type=str, help="Name of the file to show")
-    file_parser.add_argument('-t', '--tabulate', action='store_true', help="Display in tabulated format")
+    database_parser = subparsers.add_parser('database', help="Show contents of a database file.")
+    database_parser.add_argument('database_name', type=str, help="Name of the database to show.")
+    database_parser.add_argument('-t', '--tabulate', action='store_true', help="Display in tabulated format.")
 
     location_parser = subparsers.add_parser('location', help="Show location of a specific attendee")
     location_parser.add_argument('attendee_id', type=int, help="ID of the attendee")
@@ -33,16 +41,11 @@ class CommandInterface(cmd2.Cmd):
     def do_show(self, args):
         """Show data from the database based on subcommand. Usage: show <subcommand> [options]"""
 
-        if args.subcommand == "file":
-            filename = args.filename
+        if args.subcommand == "database":
+            database_name = args.database_name
             tabulate = args.tabulate
 
-            if tabulate:
-                self.poutput(f"Showing file '{filename}' in tabulated format.")
-
-            else:
-                self.poutput(f"Showing file '{filename}' in default format.")
-                # Call the default display function here
+            self.print_database(database_name, tabulate)
 
         elif args.subcommand == "location":
             attendee_id = args.attendee_id
@@ -50,7 +53,7 @@ class CommandInterface(cmd2.Cmd):
             self.get_location(attendee_id)
 
         else:
-            self.poutput("Error: Unknown subcommand for 'show'")
+            self.poutput(style("Error - Unknown subcommand for 'show'", fg=Fg.RED))
 
     def default(self, statement):
         self.poutput(style(f"Error - Unknown Command: {statement.raw}\n"
